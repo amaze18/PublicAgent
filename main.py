@@ -20,14 +20,8 @@ dotenv_path = Path('.env')
 load_dotenv(dotenv_path=dotenv_path)
 
 from utils import call_groq_api  
-from pre_processing import get_relative_info
 
 from model import get_response_by_bot
-
-from post_processing import get_key_value_pairs
-from post_processing import save_to_redis
-from post_processing import log_to_supabase
-
 from concurrent.futures import ThreadPoolExecutor
 executor = ThreadPoolExecutor(max_workers=3)
 
