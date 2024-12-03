@@ -1,0 +1,14 @@
+fastapi
+fastapi[standard]
+groq
+uvicorn
+fastapi-cors
+python-dotenv
+supabase
+redis
+requests
+openai>=1.0.0
+
+logging
+
+fastapi-limiter
