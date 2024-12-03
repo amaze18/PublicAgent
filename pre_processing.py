@@ -50,66 +50,6 @@ class Timer:
     def __exit__(self, *args):
         self.duration_ms = round((time.perf_counter() - self.start) * 1000, 2)
 
-async def get_relative_info(
-    question: str,
-    r: redis.Redis,
-    personality: str,
-    max_retries: int = 3,
-    batch_size: int = 100
-) -> Tuple[str, float, float]:
-    """
-    Optimized function to retrieve relevant information from Redis based on question category.
-    
-    Args:
-        question: User's question
-        r: Redis client instance
-        personality: Chatbot personality prefix
-        max_retries: Maximum number of Redis operation retries
-        batch_size: Number of keys to process in each batch
-    
-    Returns:
-        Tuple containing:
-        - Retrieved information string
-        - Category identification time (ms)
-        - Data retrieval time (ms)
-    """
-    # Input validation
-    if not all([question, r, personality]):
-        logging.warning("Missing required parameters")
-        return "", 0, 0
-
-    # Category identification with timing
-    with Timer() as cit_timer:
-        try:
-            category = categorize_question(question)
-        except Exception as e:
-            logging.error(f"Category identification failed: {e}")
-            return "", 0, 0
-
-    if category == "no":
-        return "", cit_timer.duration_ms, 0
-
-    # Data retrieval with timing
-    with Timer() as drt_timer:
-        pattern = f"{personality}:{category}:*"
-        retry_count = 0
-        results = []
-
-        while retry_count < max_retries:
-            try:
-                results = get_redis_data(r, pattern, batch_size)
-                break
-            except redis.RedisError as e:
-                retry_count += 1
-                if retry_count == max_retries:
-                    logging.error(f"Max retries reached. Redis error: {e}")
-                    return "", cit_timer.duration_ms, 0
-                time.sleep(0.1 * retry_count)  # Exponential backoff
-
-        # Format results efficiently
-        response = "\n".join(f"{key} - {value}" for key, value in results)
-
-    return response, cit_timer.duration_ms, drt_timer.duration_ms
 
 # Configuration constants
 REDIS_CONFIG = {
@@ -119,6 +59,3 @@ REDIS_CONFIG = {
     'max_connections': 10
 }
 
-_all_ = [
-    "get_relative_info"
-]
